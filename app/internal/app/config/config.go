@@ -2,7 +2,9 @@ package config
 
 import (
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type Config struct {
@@ -12,6 +14,7 @@ type Config struct {
 	App             AppConfig
 	DocumentStorage DocumentStorageConfig
 	SMTP            SMTPConfig
+	MailPolling     MailPollingConfig
 }
 
 type AppConfig struct {
@@ -35,11 +38,35 @@ type SMTPConfig struct {
 	From     string
 }
 
+type MailPollingConfig struct {
+	Enabled  bool
+	Interval time.Duration
+	Source   MailSourceConfig
+	Filter   MailFilterConfig
+}
+
+type MailSourceConfig struct {
+	Type    string
+	BaseURL string
+	Limit   int
+}
+
+type MailFilterConfig struct {
+	RecipientEmail   string
+	SubjectPrefix    string
+	AttachmentSuffix string
+}
+
 type CORSConfig struct {
 	AllowedOrigins []string
 }
 
 func Load() (Config, error) {
+	pollInterval, err := getEnvDuration("MAIL_POLL_INTERVAL", 5*time.Second)
+	if err != nil {
+		return Config{}, err
+	}
+
 	return Config{
 		APIPort: getEnv("API_PORT", "8080"),
 		CORS: CORSConfig{
@@ -74,6 +101,21 @@ func Load() (Config, error) {
 			Password: os.Getenv("SMTP_PASSWORD"),
 			From:     getEnv("SMTP_FROM", "server@example.com"),
 		},
+
+		MailPolling: MailPollingConfig{
+			Enabled:  getEnvAsBool("MAIL_POLL_ENABLED", true),
+			Interval: pollInterval,
+			Source: MailSourceConfig{
+				Type:    getEnv("MAIL_SOURCE_TYPE", "mailpit"),
+				BaseURL: strings.TrimRight(getEnv("MAIL_SOURCE_BASE_URL", "http://mailpit:8025"), "/"),
+				Limit:   getEnvAsInt("MAIL_SOURCE_LIMIT", 25),
+			},
+			Filter: MailFilterConfig{
+				RecipientEmail:   getEnv("MAIL_FILTER_RECIPIENT_EMAIL", getEnv("APP_EMAIL", "sender@example.com")),
+				SubjectPrefix:    getEnv("MAIL_FILTER_SUBJECT_PREFIX", "Encrypted document package:"),
+				AttachmentSuffix: getEnv("MAIL_FILTER_ATTACHMENT_SUFFIX", "_encrypted_package.json"),
+			},
+		},
 	}, nil
 }
 
@@ -104,4 +146,48 @@ func getEnvAsCSV(key string, def []string) []string {
 	}
 
 	return def
+}
+
+func getEnvAsBool(key string, def bool) bool {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		return def
+	}
+
+	switch strings.ToLower(strings.TrimSpace(val)) {
+	case "1", "true", "yes", "on":
+		return true
+	case "0", "false", "no", "off":
+		return false
+	default:
+		return def
+	}
+}
+
+func getEnvAsInt(key string, def int) int {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		return def
+	}
+
+	parsed, err := strconv.Atoi(strings.TrimSpace(val))
+	if err != nil {
+		return def
+	}
+
+	return parsed
+}
+
+func getEnvDuration(key string, def time.Duration) (time.Duration, error) {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		return def, nil
+	}
+
+	parsed, err := time.ParseDuration(strings.TrimSpace(val))
+	if err != nil {
+		return 0, err
+	}
+
+	return parsed, nil
 }

@@ -100,6 +100,32 @@
           <div id="verifyStatus" class="status-box status-neutral">No verification yet.</div>
           <pre id="verifyResult" class="result-box"></pre>
         </article>
+
+        <article class="panel panel-wide">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Flow C</p>
+              <h2>Incoming Packages</h2>
+              <p>
+                Приложение опрашивает почтовый источник в фоне, автоматически
+                извлекает JSON-пакеты, расшифровывает их и публикует изменения в интерфейс через SSE.
+              </p>
+            </div>
+            <div class="stream-indicator-block">
+              <span class="meta-label">Live stream</span>
+              <strong id="streamStatus">Connecting...</strong>
+            </div>
+          </div>
+
+          <div id="inboundStatus" class="status-box status-neutral">
+            Waiting for inbound packages.
+          </div>
+
+          <div id="inboundEmpty" class="empty-state">
+            Пока нет обработанных входящих пакетов.
+          </div>
+          <div id="inboundList" class="inbound-list"></div>
+        </article>
       </section>
     </main>
 

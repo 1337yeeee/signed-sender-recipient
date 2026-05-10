@@ -30,6 +30,9 @@ func SetupRouter(appContainer *container.AppContainer) *gin.Engine {
 		api.GET("/identity", handlerNotConfigured)
 		api.POST("/documents/send", handlerNotConfigured)
 		api.POST("/packages/verify-decrypt", handlerNotConfigured)
+		api.GET("/inbound/packages", handlerNotConfigured)
+		api.GET("/inbound/packages/:mailMessageID/file", handlerNotConfigured)
+		api.GET("/events", handlerNotConfigured)
 		return r
 	}
 
@@ -45,6 +48,16 @@ func SetupRouter(appContainer *container.AppContainer) *gin.Engine {
 	} else {
 		api.POST("/documents/send", appContainer.DocumentHandler.SendDocument)
 		api.POST("/packages/verify-decrypt", appContainer.DocumentHandler.VerifyDecryptPackage)
+	}
+
+	if appContainer.InboundHandler == nil {
+		api.GET("/inbound/packages", handlerNotConfigured)
+		api.GET("/inbound/packages/:mailMessageID/file", handlerNotConfigured)
+		api.GET("/events", handlerNotConfigured)
+	} else {
+		api.GET("/inbound/packages", appContainer.InboundHandler.ListPackages)
+		api.GET("/inbound/packages/:mailMessageID/file", appContainer.InboundHandler.DownloadFile)
+		api.GET("/events", appContainer.InboundHandler.StreamEvents)
 	}
 
 	return r

@@ -15,20 +15,36 @@ import (
 )
 
 type Server struct {
-	cfg    config.Config
-	router *gin.Engine
+	cfg      config.Config
+	router   *gin.Engine
+	services []container.BackgroundService
 }
 
-func New(cfg config.Config, container *container.AppContainer) *Server {
-	router := routes.SetupRouter(container)
+func New(cfg config.Config, appContainer *container.AppContainer) *Server {
+	router := routes.SetupRouter(appContainer)
+	services := []container.BackgroundService(nil)
+	if appContainer != nil {
+		services = appContainer.BackgroundServices
+	}
 
 	return &Server{
-		cfg:    cfg,
-		router: router,
+		cfg:      cfg,
+		router:   router,
+		services: services,
 	}
 }
 
 func (s *Server) Run() error {
+	appCtx, cancelWorkers := context.WithCancel(context.Background())
+	defer cancelWorkers()
+
+	for _, service := range s.services {
+		if service == nil {
+			continue
+		}
+		go service.Run(appCtx)
+	}
+
 	srv := &http.Server{
 		Addr:    ":" + s.cfg.APIPort,
 		Handler: s.router,
@@ -46,6 +62,7 @@ func (s *Server) Run() error {
 
 	<-quit
 	log.Println("shutting down server...")
+	cancelWorkers()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

@@ -43,23 +43,40 @@ func (s *LocalDocumentStorage) Save(ctx context.Context, id, originalFileName st
 }
 
 func (s *LocalDocumentStorage) SaveEncryptedPackage(ctx context.Context, documentID string, content []byte) (string, error) {
+	return s.saveBytes(ctx, s.basePath, documentID+"_encrypted_package.json", content)
+}
+
+func (s *LocalDocumentStorage) SaveInboundPackage(ctx context.Context, mailMessageID, originalFileName string, content []byte) (string, error) {
+	fileName := mailMessageID + "_" + sanitizeFileName(originalFileName)
+	return s.saveBytes(ctx, filepath.Join(s.basePath, "inbound", "packages"), fileName, content)
+}
+
+func (s *LocalDocumentStorage) SaveDecryptedDocument(ctx context.Context, documentID, originalFileName string, content []byte) (string, error) {
+	fileName := documentID + "_" + sanitizeFileName(originalFileName)
+	return s.saveBytes(ctx, filepath.Join(s.basePath, "inbound", "documents"), fileName, content)
+}
+
+func (s *LocalDocumentStorage) saveBytes(ctx context.Context, directory, fileName string, content []byte) (string, error) {
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
 	if s.basePath == "" {
 		return "", fmt.Errorf("document storage path is not configured")
 	}
 
-	if err := os.MkdirAll(s.basePath, 0o755); err != nil {
+	if err := os.MkdirAll(directory, 0o755); err != nil {
 		return "", fmt.Errorf("create document storage directory: %w", err)
 	}
 
-	path := filepath.Join(s.basePath, documentID+"_encrypted_package.json")
+	path := filepath.Join(directory, fileName)
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
-		return "", fmt.Errorf("create encrypted package file: %w", err)
+		return "", fmt.Errorf("create stored file: %w", err)
 	}
 	defer file.Close()
 
 	if _, err := io.Copy(file, readerWithContext{ctx: ctx, reader: bytes.NewReader(content)}); err != nil {
-		return "", fmt.Errorf("store encrypted package file: %w", err)
+		return "", fmt.Errorf("store document file: %w", err)
 	}
 
 	return path, nil

@@ -140,8 +140,16 @@ h2 {
   padding: 24px;
 }
 
+.panel-wide {
+  grid-column: 1 / -1;
+}
+
 .panel-header {
   margin-bottom: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
 }
 
 .form-stack {
@@ -268,6 +276,141 @@ button:disabled {
   background: linear-gradient(135deg, #7a7a7a 0%, #595959 100%);
 }
 
+.stream-indicator-block {
+  min-width: 180px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line);
+}
+
+.inbound-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.inbound-card,
+.empty-state {
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.inbound-card {
+  padding: 18px;
+}
+
+.empty-state {
+  padding: 20px;
+  color: var(--muted);
+}
+
+.inbound-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.inbound-title {
+  margin: 0 0 6px;
+  font-family: "IBM Plex Serif", Georgia, serif;
+  font-size: 1.1rem;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.status-pill-received,
+.status-pill-processing {
+  color: #885c08;
+  background: rgba(181, 102, 13, 0.12);
+}
+
+.status-pill-processed {
+  color: var(--ok);
+  background: rgba(22, 121, 76, 0.12);
+}
+
+.status-pill-failed {
+  color: var(--error);
+  background: rgba(192, 57, 43, 0.12);
+}
+
+.inbound-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.inbound-meta-item {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid var(--line);
+}
+
+.inbound-meta-item strong,
+.inbound-file-list strong {
+  display: block;
+  margin-top: 5px;
+  word-break: break-word;
+}
+
+.inbound-file-list {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(249, 245, 239, 0.9);
+  border: 1px dashed rgba(82, 58, 37, 0.18);
+}
+
+.inbound-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.inbound-action-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 11px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.96);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.inbound-action-link-primary {
+  color: white;
+  background: linear-gradient(135deg, #2268bf 0%, #1c7ed6 100%);
+  border-color: transparent;
+}
+
+.inbound-error {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  color: var(--error);
+  background: rgba(192, 57, 43, 0.08);
+  border: 1px solid rgba(192, 57, 43, 0.16);
+}
+
 .mono {
   font-family: "IBM Plex Mono", "SFMono-Regular", monospace;
 }
@@ -284,7 +427,16 @@ button:disabled {
     display: grid;
   }
 
+  .panel-header,
+  .inbound-header {
+    display: grid;
+  }
+
   .hero-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .inbound-meta {
     grid-template-columns: 1fr;
   }
 
