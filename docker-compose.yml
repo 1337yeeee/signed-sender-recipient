@@ -1,0 +1,67 @@
+services:
+  mailpit:
+    image: axllent/mailpit:v1.21
+    container_name: ${MAILPIT_CONTAINER_NAME:-eds_lab_mailpit}
+    ports:
+      - "${SMTP_PORT}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+
+  sender:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: ${SENDER_CONTAINER_NAME:-eds_lab_sender}
+    depends_on:
+      mailpit:
+        condition: service_started
+    environment:
+      API_PORT: 8080
+      APP_ROLE: sender
+      APP_EMAIL: ${SENDER_APP_EMAIL}
+      DOCUMENT_STORAGE_PATH: /app/data/storage
+      APP_PRIVATE_KEY_PATH: /app/data/keys/private.pem
+      APP_PUBLIC_KEY_PATH: /app/data/keys/public.pem
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+    ports:
+      - "${SENDER_PORT:-8081}:8080"
+    volumes:
+      - ./data/sender:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  recipient:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: ${RECIPIENT_CONTAINER_NAME:-eds_lab_recipient}
+    depends_on:
+      mailpit:
+        condition: service_started
+    environment:
+      API_PORT: 8080
+      APP_ROLE: recipient
+      APP_EMAIL: ${RECIPIENT_APP_EMAIL}
+      DOCUMENT_STORAGE_PATH: /app/data/storage
+      APP_PRIVATE_KEY_PATH: /app/data/keys/private.pem
+      APP_PUBLIC_KEY_PATH: /app/data/keys/public.pem
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+    ports:
+      - "${RECIPIENT_PORT:-8082}:8080"
+    volumes:
+      - ./data/recipient:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10

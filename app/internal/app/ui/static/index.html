@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EDS Sender/Recipient</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero-card">
+        <p class="eyebrow">Electronic Digital Signature</p>
+        <div class="hero-title-row">
+          <div>
+            <h1>Unified Sender/Recipient Console</h1>
+            <p class="hero-copy">
+              Один и тот же интерфейс работает для обеих ролей.
+              Отличается подпись, а также цветовая маркировка и текст (recipient или sender) лейбла.
+            </p>
+          </div>
+          <div class="identity-card">
+            <span id="roleBadge" class="role-badge role-loading">loading</span>
+            <strong id="identityEmail">Loading identity...</strong>
+            <span id="identityFingerprint" class="mono faint"></span>
+          </div>
+        </div>
+        <div class="hero-meta">
+          <div>
+            <span class="meta-label">Signature</span>
+            <strong id="signatureAlgorithm">-</strong>
+          </div>
+          <div>
+            <span class="meta-label">Encryption</span>
+            <strong id="encryptionAlgorithm">-</strong>
+          </div>
+          <div>
+            <span class="meta-label">Key transport</span>
+            <strong id="keyTransport">-</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Flow A</p>
+              <h2>Sign, Encrypt, Send</h2>
+              <p>
+                Загрузите `.docx` и укажите email корреспондента. Интерфейс и
+                действия одинаковы для обеих ролей.
+              </p>
+            </div>
+          </div>
+
+          <form id="sendForm" class="form-stack">
+            <label>
+              Recipient email
+              <input id="recipientEmail" name="recipient_email" type="email" placeholder="recipient@example.com" required />
+            </label>
+
+            <label>
+              Document (.docx)
+              <input id="documentFile" name="file" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required />
+            </label>
+
+            <div class="actions-row">
+              <button id="sendButton" type="submit">Send document package</button>
+            </div>
+          </form>
+
+          <div id="sendStatus" class="status-box status-neutral">No request yet.</div>
+          <pre id="sendResult" class="result-box"></pre>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Flow B</p>
+              <h2>Verify, Decrypt, Inspect</h2>
+              <p>
+                Загрузите JSON-пакет, чтобы расшифровать документ и проверить ЭЦП
+                по публичному ключу отправителя из самого пакета.
+              </p>
+            </div>
+          </div>
+
+          <form id="verifyForm" class="form-stack">
+            <label>
+              Package JSON
+              <input id="packageFile" name="package" type="file" accept=".json,application/json" required />
+            </label>
+
+            <div class="actions-row">
+              <button id="verifyButton" type="submit">Verify and decrypt package</button>
+              <button id="downloadButton" type="button" class="secondary-button" disabled>Download decrypted document</button>
+            </div>
+          </form>
+
+          <div id="verifyStatus" class="status-box status-neutral">No verification yet.</div>
+          <pre id="verifyResult" class="result-box"></pre>
+        </article>
+      </section>
+    </main>
+
+    <script src="/assets/app.js"></script>
+  </body>
+  </html>
