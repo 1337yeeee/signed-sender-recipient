@@ -3,6 +3,4 @@
 .DS_Store
 frontend/node_modules/
 frontend/dist/
-frontend/*.tsbuildinfo
-data/keys/*.pem
-data/uploads/
+/data/

@@ -18,8 +18,10 @@ const downloadButton = document.getElementById("downloadButton");
 
 const streamStatus = document.getElementById("streamStatus");
 const inboundStatus = document.getElementById("inboundStatus");
+const inboundSection = document.getElementById("inboundSection");
 const inboundEmpty = document.getElementById("inboundEmpty");
 const inboundList = document.getElementById("inboundList");
+const inboundShortcut = document.getElementById("inboundShortcut");
 
 let decryptedDocument = null;
 let decryptedFileName = "decrypted-document.docx";
@@ -27,6 +29,8 @@ let decryptedMimeType =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 let inboundPackages = [];
 let eventSource = null;
+let inboundShortcutObserver = null;
+let observedInboundCard = null;
 
 boot();
 
@@ -68,6 +72,7 @@ function bindForms() {
   sendForm.addEventListener("submit", handleSendSubmit);
   verifyForm.addEventListener("submit", handleVerifySubmit);
   downloadButton.addEventListener("click", downloadDecryptedDocument);
+  inboundShortcut.addEventListener("click", jumpToLatestDecryptedDocument);
 }
 
 async function handleSendSubmit(event) {
@@ -240,11 +245,15 @@ function renderInboundPackages() {
   for (const item of items) {
     inboundList.appendChild(renderInboundCard(item));
   }
+
+  syncInboundShortcut();
 }
 
 function renderInboundCard(item) {
   const card = document.createElement("article");
   card.className = "inbound-card";
+  card.id = inboundCardID(item.mail_message_id);
+  card.dataset.mailMessageId = item.mail_message_id || "";
 
   const statusClass = `status-pill status-pill-${item.status || "received"}`;
   const mailReceivedAt = formatDateTime(item.mail_received_at);
@@ -315,6 +324,135 @@ function renderInboundCard(item) {
   }
 
   return card;
+}
+
+function syncInboundShortcut() {
+  const latestPackage = getLatestDecryptedPackage();
+  if (!latestPackage) {
+    hideInboundShortcut();
+    observeInboundCard(null);
+    return;
+  }
+
+  const targetCard = document.getElementById(inboundCardID(latestPackage.mail_message_id));
+  if (!targetCard) {
+    hideInboundShortcut();
+    observeInboundCard(null);
+    return;
+  }
+
+  observeInboundCard(targetCard);
+
+  const title = latestPackage.original_file_name || latestPackage.package_file_name || "расшифрованный документ";
+  inboundShortcut.setAttribute("title", `Перейти к документу: ${title}`);
+  inboundShortcut.setAttribute("aria-label", `Перейти к документу: ${title}`);
+
+  if (!isElementVisible(targetCard)) {
+    showInboundShortcut();
+  } else {
+    hideInboundShortcut();
+  }
+}
+
+function getLatestDecryptedPackage() {
+  const items = inboundPackages
+    .filter((item) => Boolean(item?.decrypted_document_path))
+    .sort(compareInboundPackages);
+
+  return items[0] || null;
+}
+
+function jumpToLatestDecryptedDocument() {
+  const latestPackage = getLatestDecryptedPackage();
+  if (!latestPackage) {
+    return;
+  }
+
+  const targetCard = document.getElementById(inboundCardID(latestPackage.mail_message_id));
+  if (!targetCard) {
+    inboundSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+  pulseInboundCard(targetCard);
+}
+
+function pulseInboundCard(card) {
+  if (!card) {
+    return;
+  }
+
+  card.classList.remove("inbound-card-highlight");
+  window.requestAnimationFrame(() => {
+    card.classList.add("inbound-card-highlight");
+    window.setTimeout(() => {
+      card.classList.remove("inbound-card-highlight");
+    }, 1300);
+  });
+}
+
+function observeInboundCard(targetCard) {
+  if (observedInboundCard === targetCard) {
+    return;
+  }
+
+  if (inboundShortcutObserver) {
+    inboundShortcutObserver.disconnect();
+  }
+
+  observedInboundCard = targetCard;
+  if (!targetCard) {
+    return;
+  }
+
+  inboundShortcutObserver = new IntersectionObserver(
+    (entries) => {
+      const [entry] = entries;
+      if (!entry) {
+        return;
+      }
+
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
+        hideInboundShortcut();
+      } else if (getLatestDecryptedPackage()) {
+        showInboundShortcut();
+      }
+    },
+    {
+      threshold: [0.35, 0.75]
+    }
+  );
+
+  inboundShortcutObserver.observe(targetCard);
+}
+
+function isElementVisible(element) {
+  if (!element) {
+    return false;
+  }
+
+  const rect = element.getBoundingClientRect();
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+  const visibleTop = Math.max(0, rect.top);
+  const visibleBottom = Math.min(viewportHeight, rect.bottom);
+  const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+
+  return visibleHeight >= Math.min(rect.height * 0.35, 180);
+}
+
+function showInboundShortcut() {
+  inboundShortcut.hidden = false;
+  inboundShortcut.classList.add("is-visible");
+}
+
+function hideInboundShortcut() {
+  inboundShortcut.classList.remove("is-visible");
+  inboundShortcut.hidden = true;
+}
+
+function inboundCardID(mailMessageID) {
+  return `inbound-card-${String(mailMessageID || "").replaceAll(/[^a-zA-Z0-9_-]/g, "_")}`;
 }
 
 function compareInboundPackages(left, right) {

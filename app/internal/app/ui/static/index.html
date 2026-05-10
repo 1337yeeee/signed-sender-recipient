@@ -101,7 +101,7 @@
           <pre id="verifyResult" class="result-box"></pre>
         </article>
 
-        <article class="panel panel-wide">
+        <article id="inboundSection" class="panel panel-wide">
           <div class="panel-header">
             <div>
               <p class="eyebrow">Flow C</p>
@@ -128,6 +128,51 @@
         </article>
       </section>
     </main>
+
+    <button
+      id="inboundShortcut"
+      class="inbound-shortcut"
+      type="button"
+      aria-label="Перейти к расшифрованному документу"
+      title="Перейти к расшифрованному документу"
+      hidden
+    >
+      <span class="inbound-shortcut-dot" aria-hidden="true"></span>
+      <svg
+        class="inbound-shortcut-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M8 3.75H13.5L18.25 8.5V18.75C18.25 19.9926 17.2426 21 16 21H8C6.75736 21 5.75 19.9926 5.75 18.75V6C5.75 4.75736 6.75736 3.75 8 3.75Z"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M13.25 3.75V8.75H18.25"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M12 10.75V16.25"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+        <path
+          d="M9.75 14L12 16.25L14.25 14"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
 
     <script src="/assets/app.js"></script>
   </body>
